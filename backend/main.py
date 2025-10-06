@@ -2,7 +2,6 @@
 #                                                     *****     FastAPI entry point     *****
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# backend/main.py
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +13,7 @@ app = FastAPI(title="News API Backend")
 # Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in production, restrict to your domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

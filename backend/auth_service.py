@@ -1,7 +1,11 @@
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------
+#                                                     *****     Authentication       *****
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 from .database import SessionLocal
 from .models import User
-import bcrypt
-from sqlalchemy.exc import IntegrityError
 
 db = SessionLocal()
 
@@ -12,7 +16,7 @@ def register_user(username, password):
         if db.query(User).filter(User.username == username).first():
             return False, "User already exists"
 
-        new_user = User(username=username, password=password)  # plain text now
+        new_user = User(username=username, password=password)
         db.add(new_user)
         db.commit()
         return True, "User registered successfully"

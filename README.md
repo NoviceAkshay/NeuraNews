@@ -121,3 +121,20 @@ Complete Streamlit Course for Python Developers
 Streamlit Mini Course - Make Websites With ONLY Python
 
 Python FastAPI Tutorial
+
+
+## 🚀 Run Both Frontend & Backend Simultaneously
+
+To simplify running the project, a **`run_all.py`** file has been created.  
+This allows you to start both the **FastAPI backend** and the **Streamlit frontend** in a single command!  
+
+### Usage
+```bash
+# Run both backend and frontend together
+python run_all.py
+uv run run_all.py
+
+
+
+
+

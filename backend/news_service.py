@@ -4,7 +4,6 @@
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 import requests
 from .config import NEWS_API_KEY, BASE_URL
 from .database import SessionLocal
@@ -60,4 +59,6 @@ def fetch_news(query: str, language: str = "en", page_size: int = 5):
 
     db.close()
     return results
+
+
 

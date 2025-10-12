@@ -174,6 +174,22 @@ def news_dashboard():
                         if not news_items:
                             st.warning("📭 No news found. Try a different search term.")
                         else:
+                            # --- Extract keywords for all news items from backend
+                            texts_for_keywords = [
+                                (news.get("title", "") + " " + str(news.get("description", "")))
+                                for news in news_items
+                            ]
+                            try:
+                                resp = requests.post("http://127.0.0.1:8000/extract_keywords", json=texts_for_keywords)
+                                if resp.status_code == 200:
+                                    keywords_list = resp.json().get("keywords", [])
+                                else:
+                                    keywords_list = [[] for _ in news_items]
+                            except Exception:
+                                keywords_list = [[] for _ in news_items]
+
+                            # --- Render cards (with per-news keywords)
+                            kidx = 0  # keyword index
                             for i in range(0, len(news_items), 3):
                                 row_news = news_items[i:i + 3]
                                 cols = st.columns(3)
@@ -185,6 +201,19 @@ def news_dashboard():
                                         published = news.get('publishedAt', 'N/A')
                                         description = news.get('description', 'No description available')[:200].replace("'", "&#39;").replace('"', '&quot;')
                                         url = news.get('url', '#')
+                                        keywords = keywords_list[kidx] if kidx < len(keywords_list) else []
+                                        # Render styled keyword tags (or message)
+                                        if keywords:
+                                            keywords_html = (
+                                                "<div style='margin-top:6px; margin-bottom:2px;'>"
+                                                + " ".join(
+                                                    f"<span style='background:#2563eb20;color:#2563eb;padding:2px 6px; border-radius:5px; margin-right:3px; font-size:12px;'>{k}</span>"
+                                                    for k in keywords)
+                                                + "</div>"
+                                            )
+                                        else:
+                                            keywords_html = "<div style='margin-top:6px; font-size:12px; color: #aaa;'>No keywords</div>"
+                                        kidx += 1
 
                                         if image_url:
                                             image_html = f'<div class="news-image-container"><img src="{image_url}" class="news-image"/></div>'
@@ -197,6 +226,7 @@ def news_dashboard():
                                                 <h3 class='news-title'>{title}</h3>
                                                 <p class='source-info'>🏷️ {source} &nbsp; | &nbsp; 📅 {published}</p>
                                                 <p class='news-desc'>{description}...</p>
+                                                {keywords_html}
                                                 <a href="{url}" target="_blank" class="news-link">🔗 Open Article</a>
                                             </div>
                                         """)

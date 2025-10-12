@@ -7,6 +7,9 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from .news_service import fetch_news
 from .text_cleaning import preprocess_text   # <-- import text cleaning
+from fastapi import Body
+from .trend_analyzer import preprocess_news, extract_topics, extract_keywords
+
 
 app = FastAPI(title="News API Backend")
 
@@ -39,3 +42,11 @@ def get_news(
         "suggestion": suggestion,
         "results": results
     }
+
+
+
+@app.post("/extract_keywords")
+def extract_keywords_api(texts: list = Body(...)):
+    keywords = extract_keywords(texts, min_n=3, max_n=5)
+    return {"keywords": keywords}
+

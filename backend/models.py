@@ -17,6 +17,7 @@ class News(Base):
     description = Column(String)
     image_url = Column(String, nullable=True)
     fetched_at = Column(DateTime, default=datetime.datetime.utcnow)
+    # keywords = Column(Text)
 
 # ---------------------------------------------------------------------------
 # New User model

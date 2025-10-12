@@ -57,7 +57,40 @@ Features include:
 - **database.py** → PostgreSQL connection via SQLAlchemy  
 - **models.py** → SQLAlchemy models for users and news  
 - **auth.py** → Password hashing and authentication  
-- **text_cleaning.py** → NLP preprocessing (SpaCy + NLTK)  
+- **text_cleaning.py** → NLP preprocessing (SpaCy + NLTK)
+
+**Key Steps in Text Processing:**
+
+1. **Lowercasing**  
+   Converts all text to lowercase.  
+   Example: `"GLoBAl TNDs"` → `"global tnds"`
+
+2. **Removing punctuation and special characters**  
+   Cleans text to avoid mismatches caused by symbols.  
+   Example: `"Global-Trends!"` → `"global trends"`
+
+3. **Tokenization**  
+   Splits text into individual words or tokens.  
+   Example: `"global trends today"` → `["global", "trends", "today"]`
+
+4. **Stopword Removal (optional)**  
+   Removes common words like `"the"`, `"is"`, `"and"` that do not affect meaning.
+
+5. **Stemming / Lemmatization**  
+   Reduces words to their base form for better matching.  
+   Example: `"trending"` → `"trend"`
+
+6. **Search Normalization**  
+   User queries are cleaned in the same way as news content.  
+   Example: `"GLoBAl TNDs"` → `"global trends"`, which matches relevant news articles in the database.
+
+**Effect:**  
+Users can type queries in any case, with typos, or slight variations, and the system will still return the correct results.  
+
+Example:  
+- Input: `"GLoBAl TNDs"`  
+- Matches news containing: `"Global Trends"`  
+- Output: Relevant news articles displayed to the user 
 
 ---
 
@@ -133,6 +166,7 @@ This allows you to start both the **FastAPI backend** and the **Streamlit fronte
 # Run both backend and frontend together
 python run_all.py
 uv run run_all.py
+
 
 
 

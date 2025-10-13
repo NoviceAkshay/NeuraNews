@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .news_service import fetch_news
 from .text_cleaning import preprocess_text   # <-- import text cleaning
 from fastapi import Body
-from .trend_analyzer import preprocess_news, extract_topics, extract_keywords
+from .keyword_extractor import preprocess_news, extract_topics, extract_keywords
 
 
 app = FastAPI(title="News API Backend")

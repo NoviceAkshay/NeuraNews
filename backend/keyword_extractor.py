@@ -1,4 +1,4 @@
-# backend/trend_analyzer.py
+# backend/keyword_extractor.py
 
 import nltk
 import random

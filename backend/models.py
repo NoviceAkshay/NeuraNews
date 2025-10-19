@@ -22,11 +22,17 @@ class News(Base):
 # ---------------------------------------------------------------------------
 # New User model
 # ---------------------------------------------------------------------------
+from sqlalchemy import Column, Integer, String, Text
+from .database import Base
+
 class User(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)  # we'll hash passwords later
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)   # NEW!!
+    password = Column(String, nullable=False)
+    language = Column(String, default="en")
+    interests = Column(Text, default="Technology")
+
+
 

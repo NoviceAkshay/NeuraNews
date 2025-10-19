@@ -5,14 +5,20 @@
 
 
 
-import subprocess
-import time
+# run_all.py
+import subprocess, sys, time
 
-# Start backend
-subprocess.Popen(["uv", "run", "uvicorn", "backend.main:app", "--reload"])
+py = sys.executable  # uses the venv python when activated
 
-# Small delay to make sure backend starts first
+subprocess.Popen([py, "-m", "uvicorn", "backend.main:app", "--reload"])
 time.sleep(2)
+subprocess.Popen([py, "-m", "streamlit", "run", "frontend/app.py"])
 
-# Start frontend
-subprocess.Popen(["uv", "run", "streamlit", "run", "frontend/app.py"])
+
+
+#
+# streamlit run frontend/app.py
+#
+#
+# uvicorn backend.main:app --reload
+#

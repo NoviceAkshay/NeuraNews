@@ -2,15 +2,12 @@ from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from backend.database import SessionLocal
-from backend.models import User
+from backend.models import User, News
 from backend.auth_service import register_user, login_user
 from backend.text_cleaning import preprocess_text
 from backend.keyword_extractor import preprocess_news, extract_topics, extract_keywords
 from backend.news_service import fetch_news
-
-
-
-
+from backend.keyword_extractor import extract_keywords_from_texts
 
 app = FastAPI(title="News API Backend")
 
@@ -36,22 +33,41 @@ def get_news(query: str = Query(..., description="Search term"),
     # Fetch CURRENT news from NewsAPI.org and store to DB
     latest_articles = fetch_news(cleaned_query, language, page_size=page_size)
 
-    # Return ONLY the just-fetched articles for this query (not the DB cache)
-    # Ensure frontend gets up-to-date results, every time they search
-
     return {
         "original_query": query,
         "cleaned_query": cleaned_query,
         "suggestion": suggestion,
-        "results": latest_articles  # These are structured for frontend display
+        "results": latest_articles
     }
 
+# --- Keyword Extraction API from raw texts ---
 
-# --- Keyword Extraction API ---
+
 @app.post("/extract_keywords")
 def extract_keywords_api(texts: list = Body(...)):
-    keywords = extract_keywords(texts, min_n=3, max_n=5)
+    keywords = extract_keywords_from_texts(texts, top_n=5)
     return {"keywords": keywords}
+
+# --- Keyword Extraction from Latest News in DB ---
+@app.get("/news/keywords")
+def get_keywords_for_latest_news(top_n: int = 5):
+    db = SessionLocal()
+    try:
+        articles = db.query(News).order_by(News.published_at.desc()).limit(20).all()
+        article_dicts = [{'title': a.title, 'description': a.description} for a in articles]
+
+        keywords_list = extract_keywords(article_dicts, top_n=top_n)
+
+        results = []
+        for article, keywords in zip(article_dicts, keywords_list):
+            results.append({
+                "title": article['title'],
+                "description": article['description'],
+                "keywords": keywords
+            })
+        return {"results": results}
+    finally:
+        db.close()
 
 # --- Registration API ---
 class RegisterRequest(BaseModel):
@@ -85,7 +101,6 @@ def login_user_api(request: LoginRequest):
 
 # --- User Profile GET/PUT ---
 
-# GET Profile
 @app.get("/user/profile/{username}")
 def get_profile(username: str):
     db = SessionLocal()
@@ -102,7 +117,6 @@ def get_profile(username: str):
     finally:
         db.close()
 
-# PUT Profile (Full Edit)
 class ProfileUpdate(BaseModel):
     email: str
     language: str
@@ -116,7 +130,6 @@ def update_profile(username: str, update: ProfileUpdate):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Check if email belongs to a different user
         email_owner = db.query(User).filter(User.email == update.email).first()
         if email_owner and email_owner.id != user.id:
             raise HTTPException(status_code=400, detail="Email already in use by another user")
@@ -128,7 +141,3 @@ def update_profile(username: str, update: ProfileUpdate):
         return {"success": True, "message": "Profile updated"}
     finally:
         db.close()
-
-# -----------------------------------------------------------------------------
-# Add any additional endpoints as needed (analytics, etc)
-# -----------------------------------------------------------------------------

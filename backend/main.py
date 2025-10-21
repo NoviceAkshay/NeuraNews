@@ -8,6 +8,11 @@ from backend.text_cleaning import preprocess_text
 from backend.keyword_extractor import preprocess_news, extract_topics, extract_keywords
 from backend.news_service import fetch_news
 from backend.keyword_extractor import extract_keywords_from_texts
+from backend.sentement_analyzer import NewsSentimentEmotionAnalyzer
+
+
+
+
 
 app = FastAPI(title="News API Backend")
 
@@ -141,3 +146,24 @@ def update_profile(username: str, update: ProfileUpdate):
         return {"success": True, "message": "Profile updated"}
     finally:
         db.close()
+
+
+
+
+sentiment_model = NewsSentimentEmotionAnalyzer()
+
+@app.post("/analyze_sentiment")
+def analyze_sentiment_api(texts: list = Body(...)):
+    results = sentiment_model.batch_analyze_sentiment(texts)
+    return {"sentiments": results}
+
+
+
+from backend.ner_analyzer import NewsNerAnalyzer
+
+ner_model = NewsNerAnalyzer()
+
+@app.post("/extract_entities")
+def extract_entities_api(texts: list = Body(...)):
+    entities = ner_model.batch_extract_entities(texts)
+    return {"entities": entities}

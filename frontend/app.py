@@ -6,9 +6,12 @@ import re
 from streamlit_mic_recorder import speech_to_text
 import speech_recognition as sr
 
+
+
+
 st.set_page_config(
     page_title="Neura News",
-    page_icon="assets/neura-logo.png",
+    page_icon="E:\Dev\PyCharm\AppNews\assets\neura-logo.png",
     layout="wide"
 )
 
@@ -148,6 +151,15 @@ def sidebar_navigation():
             <div style='background: {COLORS['light_gray']}; padding:10px; border-radius:8px; margin-bottom:10px; text-align:center;'>
                 <p style='color: {COLORS['dark_bg']}; margin:0; font-size:14px;'>👤 {st.session_state['username']}</p>
             </div>""", unsafe_allow_html=True)
+
+        st.markdown("""
+            <div style='...'>
+                <img src="assets/neura-logo.png" style='width:120px; height:auto; margin-bottom:10px;'/>
+                ...
+            </div>
+        """, unsafe_allow_html=True)
+
+
         if st.button("🚪 Logout"):
             st.session_state["logged_in"] = False
             st.session_state["username"] = ""
@@ -202,27 +214,37 @@ def news_dashboard():
                             st.warning("📭 No news found. Try a different search term.")
                         else:
                             texts_for_keywords = [(news.get("title","")+ " "+ str(news.get("description",""))) for news in news_items]
+
+                            # --- KEYWORDS ---
                             try:
                                 resp = requests.post("http://127.0.0.1:8000/extract_keywords", json=texts_for_keywords)
                                 keywords_list = resp.json().get("keywords", []) if resp.status_code==200 else [[] for _ in news_items]
                             except:
                                 keywords_list = [[] for _ in news_items]
+                            # --- SENTIMENT ---
                             try:
                                 sentiment_resp = requests.post("http://127.0.0.1:8000/analyze_sentiment", json=texts_for_keywords)
                                 sentiment_list = sentiment_resp.json().get("sentiments", []) if sentiment_resp.status_code==200 else [{} for _ in news_items]
                             except:
                                 sentiment_list = [{} for _ in news_items]
+                            # --- NER ---
+                            try:
+                                ner_resp = requests.post("http://127.0.0.1:8000/extract_entities", json=texts_for_keywords)
+                                entities_list = ner_resp.json().get("entities", []) if ner_resp.status_code == 200 else [[] for _ in news_items]
+                            except:
+                                entities_list = [[] for _ in news_items]
+
                             kidx = 0
-                            for i in range(0,len(news_items),3):
-                                row_news=news_items[i:i+3]
+                            for i in range(0, len(news_items), 3):
+                                row_news = news_items[i:i+3]
                                 cols = st.columns(3)
-                                for col, news in zip(cols,row_news):
+                                for col, news in zip(cols, row_news):
                                     with col:
                                         image_url = news.get("image") or news.get("image_url") or ""
                                         title = news.get('title','No Title').replace("'", "&#39;").replace('"', '&quot;')
                                         source = news.get('source','Unknown').replace("'","&#39;")
                                         published = news.get('publishedAt','N/A')
-                                        if published!='N/A':
+                                        if published != 'N/A':
                                             try:
                                                 from dateutil import parser
                                                 dt = parser.parse(published)
@@ -231,8 +253,21 @@ def news_dashboard():
                                                 pass
                                         description = news.get('description','No description available')[:200].replace("'", "&#39;").replace('"', '&quot;')
                                         url = news.get('url','#')
-                                        keywords = keywords_list[kidx] if kidx<len(keywords_list) else []
-                                        sentiment = sentiment_list[kidx] if kidx<len(sentiment_list) else []
+                                        keywords = keywords_list[kidx] if kidx < len(keywords_list) else []
+                                        sentiment = sentiment_list[kidx] if kidx < len(sentiment_list) else []
+
+                                        # --- ENTITY DISPLAY ---
+                                        entities = entities_list[kidx] if kidx < len(entities_list) else []
+                                        if entities:
+                                            entities_html = (
+                                                "<div style='margin-top:6px; margin-bottom:2px;'>"
+                                                + " ".join(
+                                                    f"<span style='background:{COLORS['light_gray']}40;color:{COLORS['medium_dark_gray']};padding:2px 6px; border-radius:5px; margin-right:3px; font-size:12px;'>{e.get('word','')} <span style='color:{COLORS['medium_gray']};font-size:11px;'>[{e.get('entity_group','')}]</span></span>"
+                                                    for e in entities)
+                                                + "</div>")
+                                        else:
+                                            entities_html = f"<div style='margin-top:6px; font-size:12px; color:{COLORS['light_medium_gray']};'>No entities</div>"
+
                                         if image_url:
                                             image_html = (
                                                 '<div style="width:100%;height:150px;overflow:hidden;border-radius:8px;'
@@ -280,6 +315,7 @@ def news_dashboard():
                                                 <p class='source-info'>🏷️ {source} &nbsp; | &nbsp; 📅 {published}</p>
                                                 <p class='news-desc'>{description}...</p>
                                                 {keywords_html}
+                                                {entities_html}
                                                 {sentiment_html}
                                                 <a href="{url}" target="_blank" class="news-link">🔗 Open Article</a>
                                             </div>""", unsafe_allow_html=True)

@@ -166,4 +166,14 @@ ner_model = NewsNerAnalyzer()
 @app.post("/extract_entities")
 def extract_entities_api(texts: list = Body(...)):
     entities = ner_model.batch_extract_entities(texts)
-    return {"entities": entities}
+    entities_converted = convert_entities(entities)
+    return {"entities": entities_converted}
+
+
+import numpy as np
+
+def convert_entities(entities_list):
+    def convert_entity(entity):
+        # Convert all values in the dictionary
+        return {k: (float(v) if isinstance(v, np.floating) else v) for k, v in entity.items()}
+    return [[convert_entity(ent) for ent in entities] for entities in entities_list]

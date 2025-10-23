@@ -13,6 +13,7 @@ py = sys.executable  # uses the venv python when activated
 subprocess.Popen([py, "-m", "uvicorn", "backend.main:app", "--reload"])
 time.sleep(2)
 subprocess.Popen([py, "-m", "streamlit", "run", "frontend/app.py"])
+# subprocess.Popen([py, "frontend/app.py"])
 
 
 

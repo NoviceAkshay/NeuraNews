@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, Body
+from fastapi import FastAPI, Query, HTTPException, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from backend.database import SessionLocal
@@ -9,7 +9,11 @@ from backend.keyword_extractor import preprocess_news, extract_topics, extract_k
 from backend.news_service import fetch_news
 from backend.keyword_extractor import extract_keywords_from_texts
 from backend.sentement_analyzer import NewsSentimentEmotionAnalyzer
+from backend.ner_analyzer import NewsNerAnalyzer
+import numpy as np
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 
 
@@ -24,6 +28,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Instantiate once to avoid reloading models repeatedly
+sentiment_analyzer = NewsSentimentEmotionAnalyzer()
+ner_analyzer = NewsNerAnalyzer()
+
 
 # --- News Fetch API ---
 @app.get("/news")
@@ -177,3 +187,67 @@ def convert_entities(entities_list):
         # Convert all values in the dictionary
         return {k: (float(v) if isinstance(v, np.floating) else v) for k, v in entity.items()}
     return [[convert_entity(ent) for ent in entities] for entities in entities_list]
+
+
+
+
+import numpy as np
+
+def clean_sentiment_output(result):
+    if 'score' in result:
+        result['score'] = float(result['score'])
+    return result
+
+def clean_entities(entities):
+    cleaned = []
+    for ent in entities:
+        ent_clean = ent.copy()
+        for k, v in ent_clean.items():
+            if isinstance(v, (np.float32, np.float64)):
+                ent_clean[k] = float(v)
+        cleaned.append(ent_clean)
+    return cleaned
+
+@app.post("/analyze_batch")
+async def analyze_batch(request: Request):
+    payload = await request.json()
+    texts = payload if isinstance(payload, list) else payload.get("texts", [])
+    sentiments = []
+    entities = []
+    for txt in texts:
+        sent = sentiment_analyzer.analyze_sentiment(txt)
+        sent = clean_sentiment_output(sent)
+        ents = ner_analyzer.extract_entities(txt)
+        ents = clean_entities(ents)
+        sentiments.append(sent)
+        entities.append(ents)
+    return JSONResponse(content={
+        "sentiments": sentiments,
+        "entities": entities
+    })
+
+
+@app.post("/analyze")
+def analyze(text: str = Form(...)):
+    sentiment_result = sentiment_analyzer.analyze_sentiment(text)
+    sentiment_result = clean_sentiment_output(sentiment_result)
+
+    entities_result = ner_analyzer.extract_entities(text)
+    entities_result = clean_entities(entities_result)
+
+    return {
+        "sentiment": sentiment_result,
+        "entities": entities_result
+    }
+
+
+@app.post("/analyze_batch")
+async def analyze_batch(request: Request):
+    payload = await request.json()
+    texts = payload if isinstance(payload, list) else payload.get("texts", [])
+    sentiments = [sentiment_analyzer.analyze_sentiment(txt) for txt in texts]
+    entities = [ner_analyzer.extract_entities(txt) for txt in texts]
+    return JSONResponse(content={
+        "sentiments": sentiments,
+        "entities": entities
+    })

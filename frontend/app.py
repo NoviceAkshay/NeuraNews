@@ -165,6 +165,11 @@ def sidebar_navigation():
             st.session_state["username"] = ""
             st.experimental_rerun()
 
+
+
+
+
+
 def news_dashboard():
     load_css()
     sidebar_navigation()
@@ -173,6 +178,35 @@ def news_dashboard():
             <h1>Neura News Dashboard</h1>
             <p>Discover the latest news and insights</p>
         </div>""", unsafe_allow_html=True)
+
+    st.header("Raw Text Sentiment & Entity Analysis")
+    user_text = st.text_area("Enter any text for analysis", height=120)
+    if st.button("Analyze Text"):
+        if user_text.strip():
+            resp = requests.post("http://127.0.0.1:8000/analyze",
+                                 data={"text": user_text})
+            if resp.status_code == 200:
+                result = resp.json()
+                # Pretty print sentiment
+                sentiment = result["sentiment"]
+                st.markdown(f"**Sentiment:** `{sentiment['label']}` (confidence: {sentiment['score']:.2f})")
+
+                # Pretty print entities
+                entities = result["entities"]
+                if entities:
+                    st.markdown("**Entities:**")
+                    for ent in entities:
+                        st.markdown(
+                            f"- `{ent['word']}` (_{ent['entity_group']}_), confidence: {ent['score']:.2f}"
+                        )
+                else:
+                    st.markdown("_No entities detected._")
+
+            else:
+                st.error("Backend error")
+        else:
+            st.warning("Please enter some text.")
+
     st.markdown("<div class='filter-section'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([3, 1, 1])
     with col3:
@@ -221,17 +255,22 @@ def news_dashboard():
                                 keywords_list = resp.json().get("keywords", []) if resp.status_code==200 else [[] for _ in news_items]
                             except:
                                 keywords_list = [[] for _ in news_items]
-                            # --- SENTIMENT ---
+
+
+                                # unified
+
                             try:
-                                sentiment_resp = requests.post("http://127.0.0.1:8000/analyze_sentiment", json=texts_for_keywords)
-                                sentiment_list = sentiment_resp.json().get("sentiments", []) if sentiment_resp.status_code==200 else [{} for _ in news_items]
+                                analysis_resp = requests.post("http://127.0.0.1:8000/analyze_batch",
+                                                              json=texts_for_keywords)
+                                if analysis_resp.status_code == 200:
+                                    data = analysis_resp.json()
+                                    sentiment_list = data.get("sentiments", [{} for _ in news_items])
+                                    entities_list = data.get("entities", [[] for _ in news_items])
+                                else:
+                                    sentiment_list = [{} for _ in news_items]
+                                    entities_list = [[] for _ in news_items]
                             except:
                                 sentiment_list = [{} for _ in news_items]
-                            # --- NER ---
-                            try:
-                                ner_resp = requests.post("http://127.0.0.1:8000/extract_entities", json=texts_for_keywords)
-                                entities_list = ner_resp.json().get("entities", []) if ner_resp.status_code == 200 else [[] for _ in news_items]
-                            except:
                                 entities_list = [[] for _ in news_items]
 
                             kidx = 0
@@ -319,6 +358,8 @@ def news_dashboard():
                                                 {sentiment_html}
                                                 <a href="{url}" target="_blank" class="news-link">🔗 Open Article</a>
                                             </div>""", unsafe_allow_html=True)
+
+
                     else:
                         st.error("⚠️ Backend error. Please try again later.")
                 except requests.exceptions.RequestException:

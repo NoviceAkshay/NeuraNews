@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI(title="News API Backend")
 
-# --- CORS for frontend ---
+# --- CORS for streamlit-frontend ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -180,7 +180,6 @@ def extract_entities_api(texts: list = Body(...)):
     return {"entities": entities_converted}
 
 
-import numpy as np
 
 def convert_entities(entities_list):
     def convert_entity(entity):
@@ -241,13 +240,66 @@ def analyze(text: str = Form(...)):
     }
 
 
+
+
+
+
+from backend.topic_modeling import get_topics_from_articles
+from typing import List
+from pydantic import BaseModel
+
+
+class TopicRequest(BaseModel):
+    articles: List[str]
+    num_topics: int = 5
+
+
+@app.post("/topics")
+async def extract_topics(request: TopicRequest):
+    """
+    Extract topics from a list of articles
+
+    Request body:
+    {
+        "articles": ["article text 1", "article text 2", ...],
+        "num_topics": 5
+    }
+    """
+    try:
+        result = get_topics_from_articles(request.articles, request.num_topics)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+
+
+
+
+from pydantic import BaseModel
+from typing import List
+
+class BatchAnalyzeRequest(BaseModel):
+    articles: List[str]
+
 @app.post("/analyze_batch")
-async def analyze_batch(request: Request):
-    payload = await request.json()
-    texts = payload if isinstance(payload, list) else payload.get("texts", [])
-    sentiments = [sentiment_analyzer.analyze_sentiment(txt) for txt in texts]
-    entities = [ner_analyzer.extract_entities(txt) for txt in texts]
-    return JSONResponse(content={
+async def analyze_batch(request: BatchAnalyzeRequest):
+    print("---- /analyze_batch called ----")
+    print("Batch articles:", request.articles)
+    texts = request.articles
+    sentiments = []
+    entities = []
+    for txt in texts:
+        print("Analyzing text:", txt)
+        sent = sentiment_analyzer.analyze_sentiment(txt)
+        sent = clean_sentiment_output(sent)
+        print("Got sentiment:", sent)
+        ents = ner_analyzer.extract_entities(txt)
+        ents = clean_entities(ents)
+        sentiments.append(sent)
+        entities.append(ents)
+    print("Returning:", sentiments)
+    return {
         "sentiments": sentiments,
         "entities": entities
-    })
+    }

@@ -66,4 +66,5 @@ def extract_keywords_from_texts(texts, top_n=5):
             top_n=top_n
         )
         keywords_per_text.append([kw[0] for kw in keywords])
+        print(f'Keywords extracted from text: {text}')
     return keywords_per_text

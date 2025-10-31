@@ -20,23 +20,14 @@ class TopicModeler:
         )
 
     def extract_topics(self, documents: List[str], num_topics: int = 5) -> Dict[str, Any]:
-        """
-        Extract topics from a list of documents
 
-        Args:
-            documents: List of text documents (news articles)
-            num_topics: Number of top topics to return
-
-        Returns:
-            Dictionary containing topics, document assignments, and topic info
-        """
         # ✅ Increased minimum documents needed
         if not documents or len(documents) < 3:
             return {
                 "topics": [],
                 "document_topics": [],
                 "topic_info": [],
-                "error": "Need at least 3 documents for topic modeling"
+                "error": "Need at least 5 documents for topic modeling"
             }
 
         try:
@@ -107,14 +98,7 @@ topic_modeler = TopicModeler()
 
 
 def get_topics_from_articles(articles: List[str], num_topics: int = 5) -> Dict[str, Any]:
-    """
-    Extract topics from news articles
 
-    Args:
-        articles: List of article texts (title + description)
-        num_topics: Number of topics to extract
-
-    Returns:
-        Dictionary with topics and assignments
-    """
     return topic_modeler.extract_topics(articles, num_topics)
+
+

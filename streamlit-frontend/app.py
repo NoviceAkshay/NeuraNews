@@ -432,6 +432,7 @@ def article_analytics_page():
         keywords = []
         sentiment = {}
         entities = []
+        topics = {}
 
         # Keywords Extraction
         try:
@@ -451,6 +452,17 @@ def article_analytics_page():
         except Exception as e:
             st.warning(f"Sentiment/Entity analysis failed: {e}")
 
+        # Topic Modeling
+        try:
+            resp = requests.post(
+                "http://127.0.0.1:8000/topics",
+                json={"articles": [analysis_text], "num_topics": 3}
+            )
+            if resp.status_code == 200:
+                topics = resp.json()
+        except Exception as e:
+            st.warning(f"Topic modeling failed: {e}")
+
     # Display analytics in organized sections
     col1, col2 = st.columns(2)
 
@@ -463,6 +475,23 @@ def article_analytics_page():
             st.markdown(keywords_html, unsafe_allow_html=True)
         else:
             st.info("No keywords detected")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Topic Modeling Section
+        st.markdown('<div class="analytics-section">', unsafe_allow_html=True)
+        st.markdown('<div class="analytics-title">📝 Topics</div>', unsafe_allow_html=True)
+        topic_list = topics.get("topics", [])
+        if topic_list:
+            for topic in topic_list:
+                st.markdown(
+                    f'<div class="topic-tag"><strong>{topic["label"]}</strong>: ' +
+                    ", ".join(topic["keywords"]) + f" <span style='color:#999'>(Docs: {topic['count']})</span></div>",
+                    unsafe_allow_html=True
+                )
+        elif "error" in topics:
+            st.info(topics["error"])
+        else:
+            st.info("No topics detected")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Named Entity Recognition

@@ -11,7 +11,7 @@ from backend.keyword_extractor import extract_keywords_from_texts
 from backend.sentement_analyzer import NewsSentimentEmotionAnalyzer
 from backend.ner_analyzer import NewsNerAnalyzer
 import numpy as np
-
+from typing import List
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -256,15 +256,7 @@ class TopicRequest(BaseModel):
 
 @app.post("/topics")
 async def extract_topics(request: TopicRequest):
-    """
-    Extract topics from a list of articles
 
-    Request body:
-    {
-        "articles": ["article text 1", "article text 2", ...],
-        "num_topics": 5
-    }
-    """
     try:
         result = get_topics_from_articles(request.articles, request.num_topics)
         return result
@@ -276,8 +268,7 @@ async def extract_topics(request: TopicRequest):
 
 
 
-from pydantic import BaseModel
-from typing import List
+
 
 class BatchAnalyzeRequest(BaseModel):
     articles: List[str]

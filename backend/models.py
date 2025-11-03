@@ -4,9 +4,13 @@
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-from sqlalchemy import Column, Integer, String, DateTime, Text
+# backend/models.py
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
+
+# ----- Existing tables (unchanged except where noted) -----
 
 class News(Base):
     __tablename__ = "news"
@@ -30,12 +34,8 @@ class User(Base):
     number = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
-
-
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey
-from sqlalchemy.orm import relationship
-from .database import Base
+    # NEW: admin flag (default False). Kept additive to avoid breaking existing logic.
+    is_admin = Column(Boolean, default=False, nullable=False)
 
 class Article(Base):
     __tablename__ = "articles"
@@ -47,7 +47,6 @@ class Article(Base):
     url = Column(String, unique=True)
     location = Column(String)
     description = Column(String)
-    # Relationships
     topics = relationship("ArticleTopic", back_populates="article")
     sentiment = relationship("Sentiment", uselist=False, back_populates="article")
 
@@ -74,3 +73,12 @@ class Sentiment(Base):
     sentiment = Column(Float)
     sentiment_label = Column(String)
     article = relationship("Article", back_populates="sentiment")
+
+
+# New: admin sessions (opaque token storage)
+class AdminSession(Base):
+    __tablename__ = "admin_sessions"
+    token = Column(String, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)

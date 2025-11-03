@@ -22,6 +22,10 @@ from backend.news_service import fetch_news
 from backend.sentement_analyzer import NewsSentimentEmotionAnalyzer
 from backend.ner_analyzer import NewsNerAnalyzer
 from backend.topic_modeling import get_topics_from_articles
+# # near the top with other imports
+# from backend.admin_routes import admin as admin_router
+# main.py (add after other imports)
+from backend.admin_routes import router as admin_router
 
 # ---------------------------------------------------
 # App + CORS
@@ -36,6 +40,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# # after app = FastAPI(...) and middleware
+# app.include_router(admin_router)
+
+
+# ... after app and CORS setup
+app.include_router(admin_router)
+
+
 # ---------------------------------------------------
 # Singletons
 # ---------------------------------------------------
@@ -45,6 +58,39 @@ ner_analyzer = NewsNerAnalyzer()
 # ---------------------------------------------------
 # Helpers
 # ---------------------------------------------------
+
+
+
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(
+        title="News API Backend",
+        version="1.0.0",
+        description="API",
+        routes=app.routes,
+    )
+    # ensure components and securitySchemes exist
+    schema.setdefault("components", {}).setdefault("securitySchemes", {}).update({
+        "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    })
+    # apply bearer to admin routes by default (optional)
+    schema["security"] = [{"bearerAuth": []}]
+    app.openapi_schema = schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+
+
+
+
+
+
+
+
 def topic_modeling(text: str):
     topics = []
     description = (text or "").lower()
@@ -429,77 +475,3 @@ def add_topics(request: AddTopicsRequest):
 
 
 
-#--------------------------------------------------------------------------------------------------
-
-#
-# # main.py
-# from fastapi import FastAPI, Response, HTTPException
-# from urllib.parse import unquote
-# import requests
-#
-#
-# @app.get("/img")
-# def img(u: str):
-#     url = unquote(u or "")
-#     if not url.startswith(("http://", "https://")):
-#         raise HTTPException(status_code=400, detail="Invalid URL")
-#     headers = {
-#         "User-Agent": (
-#             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-#             "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-#         ),
-#         "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-#         "Accept-Language": "en-US,en;q=0.9",
-#         "Referer": "",  # no-referrer
-#     }
-#     try:
-#         r = requests.get(url, headers=headers, timeout=10)
-#     except Exception:
-#         raise HTTPException(status_code=502, detail="Upstream fetch failed")
-#     if r.status_code != 200:
-#         raise HTTPException(status_code=r.status_code, detail="Upstream error")
-#     ctype = r.headers.get("Content-Type", "image/jpeg")
-#     return Response(r.content, media_type=ctype, headers={"Cache-Control": "public, max-age=86400"})
-
-
-
-# # routers/analytics.py (or main.py if you keep routes together)
-# from fastapi import APIRouter, Depends, HTTPException
-# from sqlalchemy.orm import Session
-#
-#
-# from backend.database import get_db            # <-- make sure this path is correct
-#
-# router = APIRouter(prefix="/analytics", tags=["analytics"])
-#
-# @router.get("/timeseries/news")
-# def timeseries_news(days: int = 30, db: Session = Depends(get_db)):
-#     try:
-#         since = datetime.utcnow() - timedelta(days=days)
-#         rows = (
-#             db.query(func.date(News.published_at).label("date"),
-#                      func.count(News.id).label("count"))
-#               .filter(News.published_at != None)          # noqa: E711
-#               .filter(News.published_at >= since)
-#               .group_by(func.date(News.published_at))
-#               .order_by(func.date(News.published_at).asc())
-#               .all()
-#         )
-#         return {"points": [{"date": str(r.date), "count": int(r.count)} for r in rows]}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"timeseries error: {e}")
-
-#
-#
-# @router.get("/timeseries/articles")
-# def timeseries_articles(days: int = 30, db: Session = Depends(get_db)):
-#     since = datetime.utcnow() - timedelta(days=days)
-#     rows = (
-#         db.query(func.date(Article.published_at).label("date"), func.count(Article.id).label("count"))
-#           .filter(Article.published_at != None)  # noqa: E711
-#           .filter(Article.published_at >= since)
-#           .group_by(func.date(Article.published_at))
-#           .order_by(func.date(Article.published_at).asc())
-#           .all()
-#     )
-#     return {"points": [{"date": str(r.date), "count": int(r.count)} for r in rows]}

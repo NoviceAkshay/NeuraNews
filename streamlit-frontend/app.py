@@ -350,6 +350,38 @@ def is_valid_email(email: str) -> bool:
 # ----------------------------------------------------------------------------
 # Pages
 # ----------------------------------------------------------------------------
+
+# --- Session keys ---
+extra_keys = [("admin_token", ""), ("admin_user", {})]
+for k, v in extra_keys:
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# --- Small helpers for admin API calls ---
+def admin_api_get(path: str):
+    tok = st.session_state.get("admin_token", "")
+    headers = {"Authorization": f"Bearer {tok}"} if tok else {}
+    r = requests.get(f"{API_BASE}{path}", headers=headers, timeout=60)
+    if r.status_code != 200:
+        try:
+            st.error(f"{path} -> {r.status_code}: {r.json()}")
+        except Exception:
+            st.error(f"{path} -> {r.status_code}: {r.text}")
+        return None
+    return r.json()
+
+def admin_api_post(path: str, json=None):
+    tok = st.session_state.get("admin_token", "")
+    headers = {"Authorization": f"Bearer {tok}"} if tok else {}
+    r = requests.post(f"{API_BASE}{path}", json=json, headers=headers, timeout=60)
+    if r.status_code != 200:
+        try:
+            st.error(f"{path} -> {r.status_code}: {r.json()}")
+        except Exception:
+            st.error(f"{path} -> {r.status_code}: {r.text}")
+        return None
+    return r.json()
+
 def landing_page():
     """Public landing page with CTAs to login/register."""
     st.markdown('<div class="newspaper-masthead">📰 Neura News</div>', unsafe_allow_html=True)
@@ -369,15 +401,20 @@ def landing_page():
     with col3:
         st.markdown('<div class="feature-card">🎙️ Voice-enabled search and interaction</div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
+    c1, c2, c3 = st.columns(3)
+    with c1:
         if st.button("👤 Login", key="landing_login"):
             st.session_state.page = "login"
             safe_rerun()
 
-    with col2:
+    with c2:
         if st.button("📝 Register", key="landing_register"):
             st.session_state.page = "register"
+            safe_rerun()
+
+    with c3:
+        if st.button("🛡️ Admin Login"):
+            st.session_state.page = "admin_login"
             safe_rerun()
 
     st.markdown("---")
@@ -425,6 +462,70 @@ def landing_page():
     this platform simplifies your news experience with AI-enhanced features.
     """
     )
+
+
+
+
+# --- New: Admin Login page ---
+def admin_login_page():
+    st.markdown('<div class="newspaper-masthead">🛡️ Admin Login</div>', unsafe_allow_html=True)
+    identifier = st.text_input("Admin username or email")
+    password = st.text_input("Admin password", type="password")
+    if st.button("Login as Admin", use_container_width=True):
+        r = requests.post(f"{API_BASE}/admin/login", json={"identifier": identifier, "password": password}, timeout=60)
+        if r.status_code == 200:
+            data = r.json()
+            st.session_state.admin_token = data.get("token", "")
+            st.session_state.admin_user = {"username": data.get("username"), "email": data.get("email")}
+            st.session_state.page = "admin_dashboard"
+            st.success("Admin login successful.")
+            safe_rerun()
+        else:
+            try:
+                st.error(f"Login failed: {r.status_code} - {r.json()}")
+            except Exception:
+                st.error(f"Login failed: {r.status_code} - {r.text}")
+
+    if st.button("⬅ Back to Landing"):
+        st.session_state.page = "landing"
+        safe_rerun()
+
+# --- New: Admin Dashboard page (guarded) ---
+def admin_dashboard_page():
+    token = st.session_state.get("admin_token", "")
+    if not token:
+        st.info("Please login as admin.")
+        st.session_state.page = "admin_login"
+        safe_rerun()
+        return
+
+    st.title("Admin Dashboard")
+    with st.sidebar:
+        st.success(f"Admin: {st.session_state.get('admin_user',{}).get('username','unknown')}")
+        if st.button("Logout Admin"):
+            admin_api_post("/admin/logout")
+            st.session_state.admin_token = ""
+            st.session_state.admin_user = {}
+            st.session_state.page = "landing"
+            safe_rerun()
+
+    # Basic stats
+    data = admin_api_get("/admin/stats/trend?days=30")
+    if data:
+        st.subheader("Sentiment distribution")
+        sd = data.get("sentiment_distribution", {})
+        if sd:
+            import pandas as pd
+            st.bar_chart(pd.Series(sd))
+
+    st.subheader("Users")
+    users = admin_api_get("/admin/users")
+    if users:
+        import pandas as pd
+        st.dataframe(pd.DataFrame(users))
+
+
+
 
 
 def login_page():
@@ -1453,19 +1554,25 @@ def user_dashboard_live():
 page = st.session_state.get("page", "landing")
 is_logged_in = bool(st.session_state.get("logged_in") or st.session_state.get("loggedin"))
 
-if not is_logged_in:
-    if page == "landing":
-        landing_page()
-    elif page == "register":
-        register_page()
-    else:
-        login_page()
+if page == "admin_login":
+    admin_login_page()
+elif page == "admin_dashboard":
+    admin_dashboard_page()
 else:
-    if page == "profile":
-        profile_page()
-    elif page == "analytics":
-        article_analytics_page()
-    elif page == "user_dashboard":
-        user_dashboard_live()
+    # original routing behavior
+    if not is_logged_in:
+        if page == "landing":
+            landing_page()
+        elif page == "register":
+            register_page()
+        else:
+            login_page()
     else:
-        news_dashboard()  # default logged-in home
+        if page == "profile":
+            profile_page()
+        elif page == "analytics":
+            article_analytics_page()
+        elif page == "user_dashboard":
+            user_dashboard_live()
+        else:
+            news_dashboard()

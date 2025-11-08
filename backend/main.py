@@ -22,9 +22,7 @@ from backend.news_service import fetch_news
 from backend.sentement_analyzer import NewsSentimentEmotionAnalyzer
 from backend.ner_analyzer import NewsNerAnalyzer
 from backend.topic_modeling import get_topics_from_articles
-# # near the top with other imports
-# from backend.admin_routes import admin as admin_router
-# main.py (add after other imports)
+
 from backend.admin_routes import router as admin_router
 
 # ---------------------------------------------------
@@ -41,9 +39,6 @@ app.add_middleware(
 )
 
 
-# # after app = FastAPI(...) and middleware
-# app.include_router(admin_router)
-
 
 # ... after app and CORS setup
 app.include_router(admin_router)
@@ -59,6 +54,18 @@ ner_analyzer = NewsNerAnalyzer()
 # Helpers
 # ---------------------------------------------------
 
+# in main.py
+from sqlalchemy import text
+from backend.database import SessionLocal
+
+@app.on_event("startup")
+def warm_db():
+    try:
+        with SessionLocal() as s:
+            s.execute(text("SELECT 1"))
+    except Exception as e:
+        # log but don't crash startup
+        print("DB warm-up failed:", e)
 
 
 from fastapi.openapi.utils import get_openapi

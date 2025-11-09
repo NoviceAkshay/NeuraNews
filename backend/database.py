@@ -25,7 +25,13 @@ DATABASE_URL = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT
 
 print("DEBUG DATABASE_URL:", DATABASE_URL)
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,   # avoid stale Supabase connections
+    pool_recycle=1800,    # recycle every 30 minutes
+    pool_size=5,
+    max_overflow=5,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

@@ -1,33 +1,46 @@
 
-
-import streamlit as st
-import requests
-import sys
 import os
+import sys
 import re
-import speech_recognition as sr
+import requests
 import pandas as pd
-from streamlit_mic_recorder import speech_to_text  # preserved (unused)
+import streamlit as st
 import matplotlib.pyplot as plt  # preserved (unused)
+import speech_recognition as sr
+from streamlit_mic_recorder import speech_to_text  # preserved (unused)
 
-# ----------------------------------------------------------------------------
-# Temporarily
-# ----------------------------------------------------------------------------
+# Optional insights import (kept from your original)
 from trend_insights import run_trend_insights
 
-# Repeated import preserved intentionally (from the originals)
-# These were present redundantly in the source; retained for parity
-import streamlit as st  # duplicate preserved intentionally
-import pandas as pd  # duplicate preserved intentionally
-import requests  # duplicate preserved intentionally
-from trend_insights import run_trend_insights  # duplicate preserved intentionally
+# --- API base (secrets -> env -> default). Keep only this; do NOT override later. ---
+def _get_api_base():
+    try:
+        return st.secrets["API_BASE"]              # secrets.toml
+    except Exception:
+        return os.getenv("API_BASE", "http://127.0.0.1:8000")  # env or default
+
+API_BASE = _get_api_base()
+
+# --- Safe import for Time Series page (surface real error if import fails) ---
+run_time_series_error = None
+try:
+    from time_series import run as run_time_series   # streamlit-frontend/time_series.py
+except Exception as e:
+    run_time_series = None
+    run_time_series_error = str(e)
+
+
+try:
+    from geo_map import run as run_geo_map
+    run_geo_map_error = None
+except Exception as e:
+    run_geo_map = None
+    run_geo_map_error = str(e)
+
 
 # ----------------------------------------------------------------------------
-# API base and backend health
+# Backend health
 # ----------------------------------------------------------------------------
-API_BASE = "http://127.0.0.1:8000"  # single source of truth
-
-
 def backend_ok() -> bool:
     """Check backend health endpoint."""
     try:
@@ -112,6 +125,25 @@ def get_image_url(article: dict) -> str:
         if isinstance(url, str) and url.strip().lower().startswith(("http://", "https://")):
             return url.strip()
     return ""
+
+
+
+
+# add this helper somewhere near other page helpers
+def nav_sidebar():
+    st.sidebar.title("Navigation")
+    choice = st.sidebar.radio(
+        "Go to",
+        ["Landing", "Explore", "Admin", "Trend Insights", "Time Series"],
+        index=["Landing", "Explore", "Admin", "Trend Insights", "Time Series"].index(
+            st.session_state.get("page", "landing").title().replace("_", " ")
+        )
+        if isinstance(st.session_state.get("page"), str) else 0,
+    )
+    st.session_state["page"] = choice.lower().replace(" ", "_")
+
+
+
 
 # ----------------------------------------------------------------------------
 # Safe rerun wrapper (consistent across app)
@@ -345,6 +377,27 @@ st.markdown(
 def is_valid_email(email: str) -> bool:
     """Basic email validator."""
     return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
+
+
+
+
+# # streamlit-frontend/app.py
+# from pathlib import Path
+# import sys
+#
+# APP_DIR = Path(__file__).parent
+# if str(APP_DIR) not in sys.path:
+#     sys.path.insert(0, str(APP_DIR))  # ensure ./ is importable for sibling modules
+#
+# run_time_series_error = None
+# try:
+#     from time_series import run as run_time_series  # sibling module: streamlit-frontend/time_series.py
+# except Exception as e:
+#     run_time_series = None
+#     run_time_series_error = str(e)  # keep the reason visible in UI
+#
+
+
 
 
 # ----------------------------------------------------------------------------
@@ -940,6 +993,13 @@ def news_dashboard():
             safe_rerun()
         if st.button("📊 User Dashboard", key="sidebar_dash"):
             st.session_state.page = "user_dashboard"
+            safe_rerun()
+        # inside with st.sidebar: in news_dashboard()
+        if st.button("📈 Time Series", key="sidebar_time_series"):
+            st.session_state.page = "time_series"
+            safe_rerun()
+        if st.button("🗺 Geo Heatmap", key="sidebar_geo"):
+            st.session_state.page = "geo_map"
             safe_rerun()
         if st.button("👤 Profile", use_container_width=True):
             st.session_state.page = "profile"
@@ -1551,28 +1611,55 @@ def user_dashboard_live():
 # ----------------------------------------------------------------------------
 # Router
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Routing
+# ----------------------------------------------------------------------------
 page = st.session_state.get("page", "landing")
 is_logged_in = bool(st.session_state.get("logged_in") or st.session_state.get("loggedin"))
+
+def _render_time_series():
+    if run_time_series:
+        run_time_series()
+    else:
+        st.error(f"Time Series page not available: {run_time_series_error or 'module not found or no run()'}")
+
+def _render_geo():
+    if run_geo_map:
+        run_geo_map()
+    else:
+        st.error(f"Geo page not available: {run_geo_map_error or 'module not found'}")
 
 if page == "admin_login":
     admin_login_page()
 elif page == "admin_dashboard":
     admin_dashboard_page()
 else:
-    # original routing behavior
     if not is_logged_in:
+        # Unauthenticated
         if page == "landing":
             landing_page()
         elif page == "register":
             register_page()
+        elif page == "time_series":
+            _render_time_series()
+        elif page == "geo_map":
+            _render_geo()
         else:
+            # default for unauthenticated
             login_page()
     else:
+        # Authenticated
         if page == "profile":
             profile_page()
         elif page == "analytics":
             article_analytics_page()
         elif page == "user_dashboard":
             user_dashboard_live()
+        elif page == "time_series":
+            _render_time_series()
+        elif page == "geo_map":
+            _render_geo()
         else:
+            # default for authenticated
             news_dashboard()

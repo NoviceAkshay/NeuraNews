@@ -37,6 +37,7 @@ class User(Base):
     # NEW: admin flag (default False). Kept additive to avoid breaking existing logic.
     is_admin = Column(Boolean, default=False, nullable=False)
 
+
 class Article(Base):
     __tablename__ = "articles"
     id = Column(Integer, primary_key=True, index=True)
@@ -47,8 +48,12 @@ class Article(Base):
     url = Column(String, unique=True)
     location = Column(String)
     description = Column(String)
+    # NEW: geo columns
+    lat = Column(Float, nullable=True)
+    lon = Column(Float, nullable=True)
     topics = relationship("ArticleTopic", back_populates="article")
     sentiment = relationship("Sentiment", uselist=False, back_populates="article")
+
 
 class Topic(Base):
     __tablename__ = "topics"

@@ -482,3 +482,108 @@ def add_topics(request: AddTopicsRequest):
 
 
 
+
+from fastapi import Query
+from sqlalchemy import func, case
+from datetime import datetime, timedelta
+from backend.database import SessionLocal
+from backend.models import Article, Topic, ArticleTopic, Sentiment
+
+@app.get("/analytics/trend_public")
+def analytics_trend_public(days: int = Query(30, ge=1, le=365), topic: str | None = None):
+    db = SessionLocal()
+    try:
+        since = datetime.utcnow() - timedelta(days=days)
+
+        # Counts by label from Sentiment.sentiment_label (string)
+        label_col = Sentiment.sentiment_label
+        pos = func.sum(case((label_col == "POSITIVE", 1), else_=0)).label("pos_count")
+        neg = func.sum(case((label_col == "NEGATIVE", 1), else_=0)).label("neg_count")
+        neu = func.sum(case((label_col == "NEUTRAL", 1), else_=0)).label("neu_count")
+
+        date_col = func.date(Article.published_at)
+
+        q = (
+            db.query(
+                date_col.label("date"),
+                Topic.name.label("topic"),
+                func.count(Article.id).label("topic_count"),
+                func.avg(Sentiment.sentiment).label("avg_sentiment"),
+                pos, neg, neu,
+            )
+            .join(ArticleTopic, ArticleTopic.article_id == Article.id)
+            .join(Topic, Topic.id == ArticleTopic.topic_id)
+            .join(Sentiment, Sentiment.article_id == Article.id)
+            .filter(Article.published_at.isnot(None))
+            .filter(Article.published_at >= since)
+        )
+        if topic:
+            q = q.filter(Topic.name == topic)
+
+        rows = (
+            q.group_by(date_col, Topic.name)
+             .order_by(date_col.asc())
+             .all()
+        )
+
+        return [
+            {
+                "date": str(d),
+                "topic": t,
+                "topic_count": int(cnt or 0),
+                "avg_sentiment": float(avg) if avg is not None else None,
+                "pos_count": int(pc or 0),
+                "neg_count": int(nc or 0),
+                "neu_count": int(ec or 0),
+            }
+            for d, t, cnt, avg, pc, nc, ec in rows
+        ]
+    finally:
+        db.close()
+
+
+
+# backend/main.py
+
+
+
+@app.get("/geo/heat")
+def geo_heat(days: int = Query(30, ge=1, le=365), topic: str | None = None):
+    if not hasattr(Article, "lat") or not hasattr(Article, "lon"):
+        return []
+
+    db = SessionLocal()
+    try:
+        since = datetime.utcnow() - timedelta(days=days)
+
+        q = (
+            db.query(
+                Article.lat,
+                Article.lon,
+                Article.published_at,
+                Topic.name.label("topic"),
+            )
+            .outerjoin(ArticleTopic, ArticleTopic.article_id == Article.id)
+            .outerjoin(Topic, Topic.id == ArticleTopic.topic_id)
+            .filter(Article.published_at.isnot(None))
+            .filter(Article.published_at >= since)
+            .filter(Article.lat.isnot(None))
+            .filter(Article.lon.isnot(None))
+        )
+
+        if topic:
+            q = q.filter(Topic.name == topic)
+
+        rows = q.all()
+        return [
+            {
+                "lat": float(lat),
+                "lon": float(lon),
+                "date": str(dt),
+                "topic": tp or "Unlabeled",
+                "weight": 1.0,
+            }
+            for lat, lon, dt, tp in rows
+        ]
+    finally:
+        db.close()

@@ -215,83 +215,151 @@ BACKEND_URL = "http://127.0.0.1:8000/news"  # preserved
 
 
 # ----------------------------------------------------------------------------
-# CSS - Unified Modern Design
+# CSS - Enhanced Modern Design
 # ----------------------------------------------------------------------------
 st.markdown(
     """
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
     :root {
         --primary: #1a1a1a;
         --secondary: #2c2c2c;
-        --accent: #4a90e2;
+        --accent: #2563eb;
+        --accent-hover: #1d4ed8;
         --foreground: #242423;
         --background: #fafbf8;
-        --card: #f5f1e8;
-        --border: #e8e3d8;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
+
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf0 100%);
+    }
+
     .glass {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
         padding: 1.5rem;
+        box-shadow: var(--shadow);
     }
+
     .newspaper-masthead {
         font-size: 2.5rem;
-        font-weight: bold;
+        font-weight: 700;
         text-align: center;
-        border-top: 3px solid var(--foreground);
-        border-bottom: 3px solid var(--foreground);
-        padding: 1rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        padding: 1.5rem 0;
         margin-bottom: 2rem;
-        letter-spacing: 2px;
+        letter-spacing: -0.5px;
+        animation: fadeInDown 0.6s ease-out;
     }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .feature-card {
         background: var(--card);
-        border-radius: 20px;
-        padding: 1rem;
-        box-shadow: 0 0 15px 2px rgba(74, 144, 226, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
         margin-bottom: 1rem;
         text-align: center;
+        border: 1px solid var(--border);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
     }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent);
+    }
+
     .button-custom {
         font-weight: 600;
-        background-color: var(--accent);
+        background: linear-gradient(135deg, var(--accent) 0%, #4338ca 100%);
         color: white;
         padding: 0.75rem 1.5rem;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         cursor: pointer;
         margin-top: 1rem;
         width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
     }
+
     .button-custom:hover {
-        background-color: #3a78d6;
+        background: linear-gradient(135deg, var(--accent-hover) 0%, #3730a3 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
     }
     .analytics-section {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 20px;
+        background: var(--card);
+        border-radius: 16px;
+        padding: 24px;
         margin-top: 20px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        transition: all 0.3s ease;
     }
+
+    .analytics-section:hover {
+        box-shadow: var(--shadow-lg);
+    }
+
     .analytics-title {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         font-weight: 600;
-        color: #242423;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #4a90e2;
-        padding-bottom: 8px;
+        color: var(--foreground);
+        margin-bottom: 16px;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     .keyword-tag {
         display: inline-block;
-        background: #4a90e220;
-        color: #2c5282;
-        padding: 6px 12px;
-        border-radius: 8px;
-        margin: 4px;
-        font-size: 14px;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1e40af;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        margin: 6px 4px;
+        font-size: 13px;
         font-weight: 500;
+        border: 1px solid #93c5fd;
+        transition: all 0.2s ease;
+        cursor: default;
+    }
+
+    .keyword-tag:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
     }
     .entity-tag {
         display: inline-block;
@@ -310,21 +378,35 @@ st.markdown(
     .sentiment-box {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 20px;
-        border-radius: 12px;
+        padding: 24px;
+        border-radius: 16px;
         text-align: center;
-        margin: 15px 0;
+        margin: 20px 0;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .sentiment-box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
     }
     .sentiment-emoji {
         font-size: 3rem;
         margin-bottom: 10px;
     }
     .article-detail-card {
-        background: #fafbf8;
-        border-radius: 15px;
-        padding: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        background: var(--card);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-lg);
         margin-bottom: 30px;
+        border: 1px solid var(--border);
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .article-image-large {
         width: 100%;
@@ -353,18 +435,66 @@ st.markdown(
     }
     .open-article-btn {
         display: inline-block;
-        background: #4a90e2;
+        background: linear-gradient(135deg, var(--accent) 0%, #4338ca 100%);
         color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 14px 28px;
+        border-radius: 12px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
+
     .open-article-btn:hover {
-        background: #3a78d6;
+        background: linear-gradient(135deg, var(--accent-hover) 0%, #3730a3 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .stButton>button {
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border);
+    }
+
+    .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        box-shadow: var(--shadow);
+    }
+
+    .stTextInput>div>div>input {
+        border-radius: 12px;
+        border: 2px solid var(--border);
+        transition: all 0.3s ease;
+    }
+
+    .stTextInput>div>div>input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .stSelectbox>div>div>select {
+        border-radius: 12px;
+    }
+
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        border-right: 1px solid var(--border);
+    }
+
+    .css-1d391kg {
+        padding-top: 3rem;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        letter-spacing: -0.02em;
+    }
+
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, var(--accent) 0%, #4338ca 100%);
     }
 </style>
 """,
@@ -438,39 +568,79 @@ def admin_api_post(path: str, json=None):
 def landing_page():
     """Public landing page with CTAs to login/register."""
     st.markdown('<div class="newspaper-masthead">📰 Neura News</div>', unsafe_allow_html=True)
-    st.write(
-        """
-        Welcome to Neura News — your AI-powered news aggregator.
-        Stay informed with the latest headlines, sentiment insights,
-        and keyword extraction from global news sources.
-        """
-    )
+
+    st.markdown("""
+        <div style='text-align: center; margin: 2rem 0; padding: 2rem; background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%); border-radius: 16px;'>
+            <h2 style='color: #1a1a1a; margin-bottom: 1rem; font-weight: 600;'>Welcome to Neura News</h2>
+            <p style='font-size: 1.1rem; color: #4b5563; line-height: 1.6; max-width: 800px; margin: 0 auto;'>
+                Your AI-powered news aggregator that delivers real-time insights, sentiment analysis,
+                and intelligent content discovery from global news sources.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h3 style='text-align: center; margin: 2.5rem 0 1.5rem; color: #1a1a1a;'>Key Features</h3>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown('<div class="feature-card">🔎 Search personalized news with filters</div>', unsafe_allow_html=True)
+        st.markdown('''
+            <div class="feature-card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔎</div>
+                <h4 style="color: #1a1a1a; margin-bottom: 0.5rem;">Smart Search</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.5;">
+                    Search personalized news with advanced filters and AI-powered recommendations
+                </p>
+            </div>
+        ''', unsafe_allow_html=True)
     with col2:
-        st.markdown('<div class="feature-card">💬 Analyze sentiment & entities in any text</div>', unsafe_allow_html=True)
+        st.markdown('''
+            <div class="feature-card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+                <h4 style="color: #1a1a1a; margin-bottom: 0.5rem;">Sentiment Analysis</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.5;">
+                    Analyze sentiment and extract entities from any text using state-of-the-art NLP
+                </p>
+            </div>
+        ''', unsafe_allow_html=True)
     with col3:
-        st.markdown('<div class="feature-card">🎙️ Voice-enabled search and interaction</div>', unsafe_allow_html=True)
+        st.markdown('''
+            <div class="feature-card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎙️</div>
+                <h4 style="color: #1a1a1a; margin-bottom: 0.5rem;">Voice Search</h4>
+                <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.5;">
+                    Hands-free news discovery with voice-enabled search and interaction
+                </p>
+            </div>
+        ''', unsafe_allow_html=True)
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        if st.button("👤 Login", key="landing_login"):
-            st.session_state.page = "login"
-            safe_rerun()
+    st.markdown("<div style='margin: 3rem 0 2rem;'></div>", unsafe_allow_html=True)
 
+    c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        if st.button("📝 Register", key="landing_register"):
-            st.session_state.page = "register"
-            safe_rerun()
+        st.markdown("""
+            <div style='background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;'>
+                <h3 style='text-align: center; color: #1a1a1a; margin-bottom: 1.5rem;'>Get Started</h3>
+        """, unsafe_allow_html=True)
 
-    with c3:
-        if st.button("🛡️ Admin Login"):
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("👤 Login", key="landing_login", use_container_width=True):
+                st.session_state.page = "login"
+                safe_rerun()
+        with col_b:
+            if st.button("📝 Register", key="landing_register", use_container_width=True):
+                st.session_state.page = "register"
+                safe_rerun()
+
+        st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
+
+        if st.button("🛡️ Admin Login", key="landing_admin", use_container_width=True):
             st.session_state.page = "admin_login"
             safe_rerun()
 
-    st.markdown("---")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='margin: 3rem 0;'><hr style='border: none; border-top: 2px solid #e5e7eb;'></div>", unsafe_allow_html=True)
 
     st.subheader("How Neura News Works")
     st.write(
@@ -936,19 +1106,32 @@ def render_cards_grid(news_items, sentiment_list):
 
                 kidx += 1
                 card_style = (
-                    "padding:16px; background:#fafbf8; border-radius:10px; "
-                    "box-shadow:0 2px 12px rgba(0,0,0,0.07); margin-bottom:12px;"
+                    "padding:20px; background:white; border-radius:16px; "
+                    "box-shadow:0 4px 12px rgba(0,0,0,0.08); margin-bottom:16px; "
+                    "border:1px solid #e5e7eb; transition:all 0.3s ease; "
+                    "height:100%;"
                 )
 
                 st.markdown(
                     f"""
-                        <div class='news-card-content' style='{card_style}'>
+                        <div class='news-card-content' style='{card_style}'
+                             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,0.12)'"
+                             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'">
                             {image_html}
                             {title_html}
-                            <p style='color:#747374;font-size:13px;margin:8px 0;'>🏷️ {source} &nbsp; | &nbsp; 📅 {published}</p>
-                            <p style='color:#242423;font-size:14px;line-height:1.5;margin-bottom:10px;'>{description}...</p>
+                            <p style='color:#6b7280;font-size:13px;margin:10px 0;display:flex;align-items:center;gap:8px;'>
+                                <span style='display:inline-flex;align-items:center;gap:4px;'>🏷️ {source}</span>
+                                <span style='color:#d1d5db;'>|</span>
+                                <span style='display:inline-flex;align-items:center;gap:4px;'>📅 {published}</span>
+                            </p>
+                            <p style='color:#374151;font-size:14px;line-height:1.6;margin-bottom:12px;'>{description}...</p>
                             {sentiment_html}
-                            <a href="{url}" target="_blank" style='color:#4a90e2;text-decoration:none;font-size:14px;font-weight:500;'>🔗 Open Article</a>
+                            <a href="{url}" target="_blank"
+                               style='display:inline-flex;align-items:center;gap:6px;color:#2563eb;text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s ease;'
+                               onmouseover="this.style.color='#1d4ed8';this.style.gap='8px'"
+                               onmouseout="this.style.color='#2563eb';this.style.gap='6px'">
+                                🔗 Open Article
+                            </a>
                         </div>
                     """,
                     unsafe_allow_html=True,
@@ -987,24 +1170,38 @@ def news_dashboard():
     st.markdown('<div class="newspaper-masthead">📰 Neura News Dashboard</div>', unsafe_allow_html=True)
 
     with st.sidebar:
-        st.markdown(f"**Logged in as:** {st.session_state.username}")
-        if st.button("📰 Home / News", key="sidebar_home"):
-            st.session_state.page = "news_dashboard"
-            safe_rerun()
-        if st.button("📊 User Dashboard", key="sidebar_dash"):
-            st.session_state.page = "user_dashboard"
-            safe_rerun()
-        # inside with st.sidebar: in news_dashboard()
-        if st.button("📈 Time Series", key="sidebar_time_series"):
-            st.session_state.page = "time_series"
-            safe_rerun()
-        if st.button("🗺 Geo Heatmap", key="sidebar_geo"):
-            st.session_state.page = "geo_map"
-            safe_rerun()
-        if st.button("👤 Profile", use_container_width=True):
-            st.session_state.page = "profile"
-            safe_rerun()
-        if st.button("🔒 Logout", use_container_width=True):
+        st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+                        color: white; text-align: center;'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>👤</div>
+                <div style='font-weight: 600; font-size: 1.1rem;'>{st.session_state.username}</div>
+                <div style='font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;'>Active User</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-bottom: 1rem;'><strong style='color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;'>Navigation</strong></div>", unsafe_allow_html=True)
+
+        current_page = st.session_state.get("page", "news_dashboard")
+
+        nav_items = [
+            ("📰", "Home / News", "news_dashboard"),
+            ("📊", "User Dashboard", "user_dashboard"),
+            ("📈", "Time Series", "time_series"),
+            ("🗺", "Geo Heatmap", "geo_map"),
+            ("👤", "Profile", "profile"),
+        ]
+
+        for icon, label, page_key in nav_items:
+            is_active = current_page == page_key
+            button_style = "primary" if is_active else "secondary"
+            if st.button(f"{icon} {label}", key=f"sidebar_{page_key}", use_container_width=True, type=button_style if is_active else None):
+                st.session_state.page = page_key
+                safe_rerun()
+
+        st.markdown("<div style='margin: 2rem 0; height: 1px; background: #e5e7eb;'></div>", unsafe_allow_html=True)
+
+        if st.button("🔒 Logout", use_container_width=True, type="secondary"):
             st.session_state.logged_in = False
             st.session_state.loggedin = False
             st.session_state.username = ""
@@ -1041,30 +1238,31 @@ def news_dashboard():
     #     st.stop()
 
     # 2) Search Section
-    st.markdown("### 🔎 Search News")
+    st.markdown("""
+        <div style='margin: 2rem 0 1.5rem;'>
+            <h2 style='font-size: 1.75rem; font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem;'>
+                🔎 Search News
+            </h2>
+            <p style='color: #6b7280; font-size: 0.95rem;'>
+                Discover the latest news with AI-powered search and sentiment analysis
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style='background: white; padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem;
+                    border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05);'>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([4, 1, 1])
     with col1:
-        query = st.text_input("Search by topic / use voice", value=st.session_state.get("last_query", ""))
+        query = st.text_input("Search by topic or keyword", value=st.session_state.get("last_query", ""), placeholder="e.g., artificial intelligence, climate change...")
     with col2:
-        page_size = st.selectbox("Articles per page", [5, 10, 20], index=1)
+        page_size = st.selectbox("Articles", [5, 10, 20], index=1)
     with col3:
         lang = st.selectbox("Language", ["en", "hi", "mr", "es", "de", "zh"], index=0)
 
-        col_vs, _ = st.columns([1, 5])
-        with col_vs:
-            if st.button("🎙 Voice Search"):
-                recognizer = sr.Recognizer()
-                try:
-                    with sr.Microphone() as source:
-                        st.info("Listening...")
-                        audio = recognizer.listen(source, timeout=5, phrase_time_limit=8)
-                    voice_text = recognizer.recognize_google(audio, language=lang)
-                    st.session_state["last_query"] = voice_text.strip()
-                    st.success(f"Recognized: {voice_text.strip()}")
-                    safe_rerun()
-                except Exception as e:
-                    st.warning(f"Voice input not recognized: {e}")
+    st.markdown("</div>", unsafe_allow_html=True)
 
     query_value = (query or st.session_state.get("last_query", "")).strip()
 
@@ -1073,16 +1271,67 @@ def news_dashboard():
     news_items = []
     sentiment_list = []
 
-    if st.button("🔍 Search"):
+    col_search, col_voice = st.columns([5, 1])
+    with col_search:
+        search_clicked = st.button("🔍 Search News", use_container_width=True, type="primary")
+    with col_voice:
+        if st.button("🎙️", use_container_width=True, help="Voice Search"):
+            recognizer = sr.Recognizer()
+            try:
+                with sr.Microphone() as source:
+                    st.info("Listening...")
+                    audio = recognizer.listen(source, timeout=5, phrase_time_limit=8)
+                voice_text = recognizer.recognize_google(audio, language=lang)
+                st.session_state["last_query"] = voice_text.strip()
+                st.success(f"Recognized: {voice_text.strip()}")
+                safe_rerun()
+            except Exception as e:
+                st.warning(f"Voice input not recognized: {e}")
+
+    if search_clicked:
         if not query_value:
-            st.warning("Enter a search term")
+            st.markdown("""
+                <div style='background: #fef3c7; border: 1px solid #fbbf24; border-radius: 12px;
+                            padding: 1rem; margin: 1rem 0; display: flex; align-items: center; gap: 12px;'>
+                    <span style='font-size: 1.5rem;'>⚠️</span>
+                    <span style='color: #92400e; font-weight: 500;'>Please enter a search term to continue</span>
+                </div>
+            """, unsafe_allow_html=True)
         else:
             st.session_state["last_query"] = query_value
-            with st.spinner("Fetching latest news..."):
+
+            with st.spinner(""):
+                st.markdown("""
+                    <div style='text-align: center; padding: 2rem; background: white; border-radius: 16px;
+                                border: 1px solid #e5e7eb; margin: 1rem 0;'>
+                        <div style='font-size: 2rem; margin-bottom: 1rem; animation: spin 1s linear infinite;'>🔄</div>
+                        <p style='color: #6b7280; font-weight: 500;'>Fetching latest news...</p>
+                        <p style='color: #9ca3af; font-size: 0.9rem;'>This may take a few seconds</p>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                    </style>
+                """, unsafe_allow_html=True)
                 data = fetch_latest_news(query=query_value, language=lang, page_size=page_size)
 
             if not data or not data.get("results"):
-                st.warning("No news found.")
+                st.markdown("""
+                    <div style='background: white; border: 2px dashed #d1d5db; border-radius: 16px;
+                                padding: 3rem 2rem; margin: 2rem 0; text-align: center;'>
+                        <div style='font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;'>📰</div>
+                        <h3 style='color: #374151; margin-bottom: 0.5rem;'>No articles found</h3>
+                        <p style='color: #6b7280; font-size: 0.95rem; margin-bottom: 1.5rem;'>
+                            Try adjusting your search terms or filters
+                        </p>
+                        <div style='display: inline-block; background: #f3f4f6; padding: 0.75rem 1.5rem;
+                                    border-radius: 8px; color: #4b5563; font-size: 0.9rem;'>
+                            <strong>Tip:</strong> Use broader keywords or try a different language
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
             else:
                 news_items = data["results"]
 
@@ -1188,14 +1437,66 @@ def news_dashboard():
                 st.session_state["cacheddoctopics"] = doc_topic_map
                 st.session_state["cached_doc_topics"] = doc_topic_map
 
-    # Optional quick distribution from cached results
+    # Quick statistics from cached results
     if st.session_state.get("cachedsentiments"):
         sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
         for s in st.session_state["cachedsentiments"]:
             lbl = (s or {}).get("label", "neutral").lower()
             if lbl in sentiment_counts:
                 sentiment_counts[lbl] += 1
-        st.subheader("Sentiment distribution")
+
+        total_articles = len(st.session_state.get("cached_articles", []))
+
+        st.markdown("""
+            <div style='margin: 2rem 0 1rem;'>
+                <h2 style='font-size: 1.5rem; font-weight: 600; color: #1a1a1a;'>📊 Quick Statistics</h2>
+            </div>
+        """, unsafe_allow_html=True)
+
+        stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+
+        with stat_col1:
+            st.markdown(f"""
+                <div style='background: white; border-radius: 16px; padding: 1.5rem;
+                            border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;'>
+                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>📰</div>
+                    <div style='font-size: 2rem; font-weight: 700; color: #2563eb;'>{total_articles}</div>
+                    <div style='color: #6b7280; font-size: 0.9rem; margin-top: 0.25rem;'>Total Articles</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        with stat_col2:
+            st.markdown(f"""
+                <div style='background: white; border-radius: 16px; padding: 1.5rem;
+                            border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;'>
+                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>😊</div>
+                    <div style='font-size: 2rem; font-weight: 700; color: #10b981;'>{sentiment_counts.get("positive", 0)}</div>
+                    <div style='color: #6b7280; font-size: 0.9rem; margin-top: 0.25rem;'>Positive</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        with stat_col3:
+            st.markdown(f"""
+                <div style='background: white; border-radius: 16px; padding: 1.5rem;
+                            border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;'>
+                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>😐</div>
+                    <div style='font-size: 2rem; font-weight: 700; color: #6b7280;'>{sentiment_counts.get("neutral", 0)}</div>
+                    <div style='color: #6b7280; font-size: 0.9rem; margin-top: 0.25rem;'>Neutral</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        with stat_col4:
+            st.markdown(f"""
+                <div style='background: white; border-radius: 16px; padding: 1.5rem;
+                            border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;'>
+                    <div style='font-size: 2rem; margin-bottom: 0.5rem;'>😞</div>
+                    <div style='font-size: 2rem; font-weight: 700; color: #ef4444;'>{sentiment_counts.get("negative", 0)}</div>
+                    <div style='color: #6b7280; font-size: 0.9rem; margin-top: 0.25rem;'>Negative</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
+        st.subheader("Sentiment Distribution")
         st.bar_chart(pd.DataFrame.from_dict(sentiment_counts, orient="index", columns=["count"]))
 
     st.markdown("---")

@@ -547,8 +547,12 @@ def analytics_trend_public(days: int = Query(30, ge=1, le=365), topic: str | Non
 
 
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from backend.database import get_db
+
 @app.get("/geo/heat")
-def geo_heat(days: int = Query(30, ge=1, le=365), topic: str | None = None):
+def geo_heat(days: int = 30, topic: str | None = None, db: Session = Depends(get_db)):
     if not hasattr(Article, "lat") or not hasattr(Article, "lon"):
         return []
 
